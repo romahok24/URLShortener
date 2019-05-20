@@ -1,5 +1,7 @@
-﻿using System;
+﻿using Microsoft.EntityFrameworkCore;
+using System;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 using UrlShortenr.Data;
 using UrlShortenr.Models;
@@ -14,12 +16,14 @@ namespace UrlShortenr.Services
             {
                 using (var context = new UrlContext())
                 {
-                    var url = context.Urls.Where(o => o.ShortUrl.Equals(shortUrl)).FirstOrDefault();
+
+
+                    var url = context.Urls.Include(r => r.Statistics).Where(o => o.ShortUrl.Equals(shortUrl)).FirstOrDefault();
 
                     if (url == null)
                         throw new Exception("Short Not Found");
 
-                    url.ClicksCount++;
+                    url.ClicksCount +=1;
 
                     Statistic stat = new Statistic
                     {
@@ -29,6 +33,8 @@ namespace UrlShortenr.Services
                         Url = url
                     };
 
+                    url.Statistics.Add(stat);
+                    context.Urls.Update(url);
                     context.Statistics.Add(stat);
                     context.SaveChanges();
 
@@ -37,25 +43,44 @@ namespace UrlShortenr.Services
             });
         }
 
-        public Task<Url> MakeShort(string longUrl, string ip, string shortUrl = "")
+        public Task<Url> MakeShort(string longUrl, string ip)
         {
             return Task.Run(() =>
             {
+                if (!String.IsNullOrWhiteSpace(longUrl))
+                {
+                    if (!longUrl.StartsWith("http://") && !longUrl.StartsWith("https://"))
+                    {
+                        throw new ArgumentException("Invalid URL format");
+                    }
+                }
+                else
+                {
+                    throw new Exception("Url is null");
+                }
+
+                Uri urlCheck = new Uri(longUrl);
+                HttpWebRequest request = (HttpWebRequest)WebRequest.Create(urlCheck);
+                request.Timeout = 10000;
+
+                try
+                {
+                    HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+                }
+                catch (Exception)
+                {
+                    throw new Exception();
+                }
+
                 using (var context = new UrlContext())
                 {
+                    string shortUrl = NewShortUrl();
                     var url = context.Urls.Where(o => o.LongUrl == longUrl).FirstOrDefault();
 
                     if (url != null)
+                    {
+                        url.ShortUrl = shortUrl;
                         return url;
-
-                    if (!String.IsNullOrWhiteSpace(shortUrl))
-                    {
-                        if (context.Urls.Where(o => o.ShortUrl == shortUrl).Any())
-                            throw new Exception("Conflict!");
-                    }
-                    else
-                    {
-                        shortUrl = this.NewShortUrl();
                     }
 
                     url = new Url()
@@ -66,9 +91,6 @@ namespace UrlShortenr.Services
                         ClicksCount = 0,
                         ShortUrl = shortUrl
                     };
-
-                    context.Urls.Add(url);
-                    context.SaveChanges();
 
                     return url;
                 }

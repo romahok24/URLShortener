@@ -1,0 +1,50 @@
+﻿@model UrlShortenr.Models.Url
+@{
+    ViewData["Title"] = "Create";
+}
+<form asp-action="create" asp-controller="home" method="post" enctype="multipart/form-data">
+    @if (Model != null)
+    {
+        <div class="form-horizontal">
+            <hr />
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="@Model.Id" />
+
+            <div class="form-group">
+                <label asp-for="@Model.LongUrl" class="col-md-2 control-label"></label>
+                <div class="col-md-10">
+                    @Html.DisplayFor(model => model.LongUrl)
+                    <span asp-validation-for="LongUrl" class="text-danger"></span>
+                </div>
+            </div>
+            <div class="form-group">
+                <label asp-for="@Model.ShortUrl" class="col-md-2 control-label"></label>
+                <div class="col-md-10">
+                    @Html.DisplayFor(model => model.ShortUrl)
+                    <span asp-validation-for="ShortUrl" class="text-danger"></span>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="form-horizontal">
+            <hr />
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="@Model.Id" />
+
+            <div class="form-group">
+            <label asp-for="LongUrl" class="col-md-2 control-label"></label>
+            <div class="col-md-10">
+                <input asp-for="LongUrl" class="form-control" />
+                <span asp-validation-for="LongUrl" class="text-danger"></span>
+            </div>
+        </div>
+            </div>
+    }
+
+    <div class="form-group">
+        <input type="submit" value="Получить короткий URL" class="btn btn-primary" />
+    </div>
+</form>
+

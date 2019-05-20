@@ -1,8 +1,31 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+﻿@model IEnumerable<UrlShortenr.Models.Url>
+@{
+    ViewBag.Title = "URL shortener";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://docs.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
+<h2>Shorten a URL</h2>
+@Html.ValidationSummary()
+
+<a asp-action="Create" class="btn btn-sm btn-dark">Добавить ссылку</a>
+
+<table class="table table-hover">
+    <tr>
+        <td>Длинный URl</td>
+        <td>Короткий URl</td>
+        <td>Дата создания</td>
+        <td>Кол-во переходов</td>
+        <td></td>
+        <td></td>
+    </tr>
+    @foreach (var item in Model)
+    {
+    <tr>
+        <td>@item.LongUrl</td>
+        <td><a asp-action="Click" asp-route-shortUrl="@item.ShortUrl">@item.ShortUrl</a></td>
+        <td>@item.Added</td>
+        <td>@item.ClicksCount</td>
+        <td><a asp-action="Create" asp-route-id="@item.Id" class="btn btn-warning">Изменить</a></td>
+        <td><a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-danger" >Удалить</a></td>
+    </tr>
+    }
+</table>

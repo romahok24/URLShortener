@@ -13,13 +13,16 @@ namespace UrlShortenr.Models
 
         [Required]
         [StringLength(1000)]
+        [Display(Name = "Длинный URL")]
         public string LongUrl { get; set; }
 
         [Required]
         [StringLength(20)]
+        [Display(Name = "Короткий URL")]
         public string ShortUrl { get; set; }
 
         [Required]
+        [Display(Name = "Дата добавления")]
         public DateTime Added { get; set; }
 
         [Required]

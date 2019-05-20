@@ -1,0 +1,32 @@
+﻿@model UrlShortenr.Models.Url
+@{
+    ViewData["Title"] = "Delete";
+}
+<h2>Удалить</h2>
+
+<h3>Вы действительно хотите удалить?</h3>
+<div>
+    <hr />
+    <dl class="dl-horizontal">
+        <dt>
+            @Html.DisplayNameFor(model => model.LongUrl)
+        </dt>
+        <dd>
+            @Html.DisplayFor(model => model.LongUrl)
+        </dd>
+        <dt>
+            @Html.DisplayNameFor(model => model.ShortUrl)
+        </dt>
+        <dd>
+            @Html.DisplayFor(model => model.ShortUrl)
+        </dd>
+    </dl>
+
+    <form asp-action="Delete">
+        <div class="form-actions no-color">
+            <input type="hidden" asp-for="Id" />
+            <input type="submit" value="Удалить" class="btn btn-sm btn-danger" />
+            <a asp-action="Index" class="btn btn-sm btn-primary">Вернуться</a>
+        </div>
+    </form>
+</div>

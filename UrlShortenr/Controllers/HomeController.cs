@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -22,56 +23,88 @@ namespace UrlShortenr.Controllers
         {
             using (var context = new UrlContext())
             {
-                return View(await context.Urls.ToListAsync());
+                return View(await context.Urls.Include(s => s.Statistics).ToListAsync());
             }
         }
 
-        public IActionResult Create()
+        /*[HttpGet]
+        public IActionResult Create(Url url)
         {
-            return View();
+            return View(url);
         }
 
-        [HttpPost]
-        public async Task<IActionResult> Create(Url url)
+        /*[HttpPost]
+        /*public async Task<IActionResult> Create(string longUrl)
         {
             string referer = Request.Headers["Referer"].ToString() ?? string.Empty;
 
-            Url shortUrl = await urlService.MakeShort(url.LongUrl, referer);
+            Url shortUrl = await urlService.MakeShort(longUrl, referer);
 
-            using (var context = new UrlContext())
+            try
             {
-                context.Urls.Add(shortUrl);
-                await context.SaveChangesAsync();
-                return RedirectToAction("Index");
+                using (var context = new UrlContext())
+                {
+                    context.Urls.Add(shortUrl);
+                    context.SaveChanges();
+                }
             }
-        }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError("", ex.Message);
+            }
 
-        public async Task<IActionResult> Edit(int? id)
+            return RedirectToAction("Index");
+        }*/
+
+        public async Task<IActionResult> Create(int? id)
         {
             if (id != null)
             {
                 using (var context = new UrlContext())
                 {
-                    var url = await context.Urls.Where(o => o.Id == id).FirstOrDefaultAsync();
+                    var url = await context.Urls.Include(s => s.Statistics).Where(o => o.Id == id).FirstOrDefaultAsync();
 
                     if (url != null)
                         return View(url);
                 }
             }
 
-            return NotFound();
+            return View();
         }
 
         [HttpPost]
-        public async Task<IActionResult> Edit(Url url)
+        public async Task<IActionResult> Create(Url url)
         {
             using (var context = new UrlContext())
             {
+                string referer = Request.Headers["Referer"].ToString() ?? string.Empty;
+
                 var item = await context.Urls.Where(o => o.Id == url.Id).FirstOrDefaultAsync();
 
-                item = url;
+                if (item != null)
+                {
+                    Url shortUrl = await urlService.MakeShort(item.LongUrl, referer);
 
-                await context.SaveChangesAsync();
+                    item.ShortUrl = shortUrl.ShortUrl;
+                    item.ShortUrl = string.Format("{0}://{1}{2}.co", Request.Scheme, Url.Content("~"), item.ShortUrl);
+                    context.Urls.Update(item);
+                    await context.SaveChangesAsync();
+                }
+                else
+                {
+                    try
+                    {
+                        Url shortUrl = await urlService.MakeShort(url.LongUrl, referer);
+                        shortUrl.ShortUrl = string.Format("{0}://{1}{2}.co", Request.Scheme, Url.Content("~"), shortUrl.ShortUrl);
+                        context.Urls.Add(shortUrl);                        
+                        await context.SaveChangesAsync();
+                    }
+                    catch (Exception ex)
+                    {
+                        ModelState.AddModelError("", ex.Message);
+                    }
+                }
+                
             }
 
             return RedirectToAction("Index");
@@ -84,6 +117,43 @@ namespace UrlShortenr.Controllers
             Statistic stat = await urlService.Click(shortUrl, referer, Request.HttpContext.Connection.RemoteIpAddress.ToString());
 
             return RedirectPermanent(stat.Url.LongUrl);
+        }
+
+        public async Task<IActionResult> Delete(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            using (var context = new UrlContext())
+            {
+                var rector = await context.Urls.Include(r => r.Statistics)
+                                    .SingleOrDefaultAsync(m => m.Id == id);
+
+                if (rector == null)
+                {
+                    return NotFound();
+                }
+
+                return View(rector);
+            }
+        }
+
+        [HttpPost, ActionName("Delete")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteConfirmed(int id)
+        {
+            using (var context = new UrlContext())
+            {
+                var url = await context.Urls.Include(s => s.Statistics).SingleOrDefaultAsync(m => m.Id == id);
+
+                context.Statistics.RemoveRange(url.Statistics);
+                context.Urls.Remove(url);
+                await context.SaveChangesAsync();
+
+                return RedirectToAction("Index");
+            }
         }
     }
 }
