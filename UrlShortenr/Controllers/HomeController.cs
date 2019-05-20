@@ -27,35 +27,6 @@ namespace UrlShortenr.Controllers
             }
         }
 
-        /*[HttpGet]
-        public IActionResult Create(Url url)
-        {
-            return View(url);
-        }
-
-        /*[HttpPost]
-        /*public async Task<IActionResult> Create(string longUrl)
-        {
-            string referer = Request.Headers["Referer"].ToString() ?? string.Empty;
-
-            Url shortUrl = await urlService.MakeShort(longUrl, referer);
-
-            try
-            {
-                using (var context = new UrlContext())
-                {
-                    context.Urls.Add(shortUrl);
-                    context.SaveChanges();
-                }
-            }
-            catch (Exception ex)
-            {
-                ModelState.AddModelError("", ex.Message);
-            }
-
-            return RedirectToAction("Index");
-        }*/
-
         public async Task<IActionResult> Create(int? id)
         {
             if (id != null)
